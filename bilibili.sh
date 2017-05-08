@@ -11,8 +11,7 @@ alias danmaku2ass="python3 danmaku2ass.py"
 alias request="curl -s -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.36 Safari/537.36'"
 
 main() {
-  local html=$(request $1)
-  local episode_id=$(expr "$html" : '.*first_ep_id = "\(.*\)";')
+  local episode_id=${1#*#}
   local episode_data=$(request http://bangumi.bilibili.com/web_api/episode/$episode_id.json)
   local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< $episode_data)
   local av_id=$(jq -r .result.currentEpisode.avId <<< $episode_data)
@@ -23,7 +22,7 @@ main() {
   local hw_id=${random:0:16}
   local app_key=452d3958f048c02a
   local app_sec=f7c926f549b9becf1c27644958676a21
-  local params="_appver=424000&_device=android&_down=0&_hwid=$hw_id&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$danmaku_id&otype=json&platform=android"
+  local params="_appver=424000&_device=android&_down=0&_hwid=$hw_id&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
   local sign=$(echo -n $params$app_sec | md5sum)
   local play_url=$(request "https://interface.bilibili.com/playurl?$params&sign=${sign:0:32}")
   local length=$(jq ".durl | length" <<< $play_url)
