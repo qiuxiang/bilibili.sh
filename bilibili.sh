@@ -4,45 +4,34 @@
 #
 
 ASS_FILE=/tmp/comments.ass
+COMMENTS_FILE=/tmp/comments.xml
+DANMAKU2ASS="python3 danmaku2ass.py"
+CURL="curl -s -H 'User-Agent:Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.36 Safari/537.36'"
 
-convert_time() {
-    time=(${1//./ })
-    second=$(printf %0.2f 0.${time[1]})
-    date -d @${time[0]} +00:%M:%S${second:1}
+main() {
+  local html=$($CURL $1)
+  local episode_id=$(expr "$html" : '.*first_ep_id = "\(.*\)";')
+  local episode_data=$($CURL http://bangumi.bilibili.com/web_api/episode/$episode_id.json)
+  local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< $episode_data)
+  local av_id=$(jq -r .result.currentEpisode.avId <<< $episode_data)
+  local bangumi_data=$($CURL "http://api.bilibili.com/view?appkey=8e9fc618fbd41e28&id=$av_id")
+  local cid=$(jq .cid <<< $bangumi_data)
+  local title=$(jq -r .title <<< $bangumi_data)
+  local random=$(md5sum <<< $RANDOM)
+  local hw_id=${random:0:16}
+  local app_key=452d3958f048c02a
+  local app_sec=f7c926f549b9becf1c27644958676a21
+  local params="_appver=424000&_device=android&_down=0&_hwid=$hw_id&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
+  local sign=$(echo -n $params$app_sec | md5sum)
+  local play_url=$($CURL "https://interface.bilibili.com/playurl?$params&sign=${sign:0:32}")
+  local length=$(jq ".durl | length" <<< $play_url)
+  local playlist
+  for (( i = 0; i < length; i++ )) do
+    playlist+="$(jq -r .durl[${i}].url <<< $play_url) "
+  done
+  $CURL http://comment.bilibili.com/$danmaku_id.xml --compressed > $COMMENTS_FILE
+  $DANMAKU2ASS -s 1280x720 -dm 20 -o $ASS_FILE $COMMENTS_FILE
+  mpv --force-media-title "$title" -sub-file $ASS_FILE --merge-files $playlist
 }
 
-echo '下载弹幕中……'
-html=$(curl -s $1)
-episode_id=$(expr "$html" : '.*first_ep_id = "\(.*\)";')
-episode=$(curl -s http://bangumi.bilibili.com/web_api/episode/${episode_id}.json)
-danmaku_id=$(expr "$episode" : '.*"danmaku":"\(.*\)","episodeId')
-comments=$(curl -s http://comment.bilibili.com/${danmaku_id}.xml --compressed)
-ass=$(cat << EOT
-[Script Info]
-
-[V4 Styles]
-Format: Name, Fontname
-Style: Default, Sens-serif
-
-[Events]
-Format: Start, End, Effect, Text
-EOT
-)
-
-echo '生成字幕文件……'
-while read -r line; do
-    p=$(expr "$line" : '.*p="\(.*\)"')
-    if [ -n "$p" ]; then
-        data=(${p//,/ })
-        content=$(expr "$line" : '.*>\(.*\)</d>')
-        start_time=$(convert_time ${data[0]})
-        end_time=$(convert_time $(bc <<< "${data[0]} + 8"))
-        effect="Banner;$[20 - ${#content} / 2];0"
-        format="{\c$(printf %06x ${data[3]})\\\fs$[${data[2]} / 2]}"
-        ass+="\nDialogue: $start_time, $end_time, $effect, $format$content"
-    fi
-done <<< "$comments"
-printf "$ass" > ${ASS_FILE}
-
-echo '请求播放……'
-you-get -p "mpv --merge-files -sub-file ${ASS_FILE}" $1
+main $@
