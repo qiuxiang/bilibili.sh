@@ -45,4 +45,4 @@ done <<< "$comments"
 printf "$ass" > ${ASS_FILE}
 
 echo '请求播放……'
-you-get -p "mpv -sub-file ${ASS_FILE}" $1
+you-get -p "mpv --merge-files -sub-file ${ASS_FILE}" $1
