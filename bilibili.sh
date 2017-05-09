@@ -3,9 +3,10 @@
 # (c) 2017 Qiu Xiang <i@7c00.cc> under MIT licence
 #
 
+BASE_PATH=$(cd $(dirname $0); pwd)
 ASS_FILE=/tmp/comments.ass
 COMMENTS_FILE=/tmp/comments.xml
-DANMAKU2ASS_PATH=danmaku2ass.py
+DANMAKU2ASS_PATH="$BASE_PATH/danmaku2ass.py"
 
 shopt -s expand_aliases
 alias danmaku2ass="python3 $DANMAKU2ASS_PATH"
@@ -41,4 +42,10 @@ main() {
   mpv --force-media-title "$title" -sub-file $ASS_FILE --merge-files $playlist
 }
 
-main $@
+if [ -z $1 ]; then
+  cat << EOF
+Usage：bilibili URL
+EOF
+else
+  main $1
+fi
