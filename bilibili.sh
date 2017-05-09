@@ -5,9 +5,10 @@
 
 ASS_FILE=/tmp/comments.ass
 COMMENTS_FILE=/tmp/comments.xml
+DANMAKU2ASS_PATH=danmaku2ass.py
 
 shopt -s expand_aliases
-alias danmaku2ass="python3 danmaku2ass.py"
+alias danmaku2ass="python3 $DANMAKU2ASS_PATH"
 alias request="curl -s -H 'User-Agent: Mozilla/5.0 BiliDroid/5.2.3 (bbcallen@gmail.com)'"
 
 main() {
