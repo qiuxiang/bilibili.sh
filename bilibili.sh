@@ -13,16 +13,28 @@ alias danmaku2ass="python3 $DANMAKU2ASS_PATH"
 alias request="curl -s -H 'User-Agent: Mozilla/5.0 BiliDroid/5.2.3 (bbcallen@gmail.com)'"
 
 main() {
-  echo 'Get episode data'
-  local episode_id=${1#*#}
-  local episode_data=$(request http://bangumi.bilibili.com/web_api/episode/$episode_id.json)
-  local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< $episode_data)
-  local av_id=$(jq -r .result.currentEpisode.avId <<< $episode_data)
+  local av_id
+  local video_pattern=https?://www.bilibili.com/video/av[0-9]+/
+  local anime_pattern=https?://bangumi.bilibili.com/anime/[0-9]+/play#[0-9]+
+  if [[ $1 =~ $anime_pattern ]]; then
+    echo 'Get episode data'
+    local episode_id=${1#*#}
+    local episode_data=$(request http://bangumi.bilibili.com/web_api/episode/$episode_id.json)
+    local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< $episode_data)
+    av_id=$(jq -r .result.currentEpisode.avId <<< $episode_data)
+  elif [[ $1 =~ $video_pattern  ]]; then
+    av_id=$(expr "$1" : '.*av\(.*\)/')
+  else
+    echo The url $1 is invalid.
+    echo A valid url is like $video_pattern or
+    echo $anime_pattern
+    exit 1
+  fi
 
-  echo 'Get bangumi data'
-  local bangumi_data=$(request "http://api.bilibili.com/view?appkey=8e9fc618fbd41e28&id=$av_id")
-  local cid=$(jq .cid <<< $bangumi_data)
-  local title=$(jq -r .title <<< $bangumi_data)
+  echo 'Get video data'
+  local video_data=$(request "http://api.bilibili.com/view?appkey=8e9fc618fbd41e28&id=$av_id")
+  local cid=$(jq .cid <<< $video_data)
+  local title=$(jq -r .title <<< $video_data)
   local random=$(md5sum <<< $RANDOM)
   local hw_id=${random:0:16}
   local params="_appver=424000&_device=android&_down=0&_hwid=$hw_id&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
@@ -37,7 +49,7 @@ main() {
   done
 
   echo 'Get comments'
-  request http://comment.bilibili.com/$danmaku_id.xml --compressed > $COMMENTS_FILE
+  request http://comment.bilibili.com/$cid.xml --compressed > $COMMENTS_FILE
   danmaku2ass -s 1280x720 -dm 20 -o $ASS_FILE $COMMENTS_FILE
   mpv --force-media-title "$title" -sub-file $ASS_FILE --merge-files $playlist
 }
