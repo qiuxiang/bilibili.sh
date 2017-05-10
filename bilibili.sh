@@ -11,6 +11,7 @@ DANMAKU2ASS_PATH="$BASE_PATH/danmaku2ass.py"
 shopt -s expand_aliases
 alias danmaku2ass="python3 $DANMAKU2ASS_PATH"
 alias request="curl -s -H 'User-Agent: Mozilla/5.0 BiliDroid/5.2.3 (bbcallen@gmail.com)'"
+command -v md5 > /dev/null || alias md5=md5sum
 
 main() {
   local av_id
@@ -35,10 +36,10 @@ main() {
   local video_data=$(request "http://api.bilibili.com/view?appkey=8e9fc618fbd41e28&id=$av_id")
   local cid=$(jq .cid <<< $video_data)
   local title=$(jq -r .title <<< $video_data)
-  local random=$(md5sum <<< $RANDOM)
+  local random=$(md5 <<< $RANDOM)
   local hw_id=${random:0:16}
   local params="_appver=424000&_device=android&_down=0&_hwid=$hw_id&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
-  local sign=$(echo -n ${params}f7c926f549b9becf1c27644958676a21 | md5sum)
+  local sign=$(echo -n ${params}f7c926f549b9becf1c27644958676a21 | md5)
 
   echo 'Get playlist'
   local play_url=$(request "https://interface.bilibili.com/playurl?$params&sign=${sign:0:32}")
