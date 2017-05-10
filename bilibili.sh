@@ -3,9 +3,9 @@
 # (c) 2017 Qiu Xiang <i@7c00.cc> under MIT licence
 #
 
-BASE_PATH=$(cd $(dirname $0); pwd)
 ASS_FILE=/tmp/comments.ass
 COMMENTS_FILE=/tmp/comments.xml
+BASE_PATH=$(cd $(dirname $0); pwd)
 DANMAKU2ASS_PATH="$BASE_PATH/danmaku2ass.py"
 
 shopt -s expand_aliases
@@ -35,9 +35,7 @@ main() {
   local video_data=$(request "http://api.bilibili.com/view?appkey=8e9fc618fbd41e28&id=$av_id")
   local cid=$(jq .cid <<< $video_data)
   local title=$(jq -r .title <<< $video_data)
-  local random=$(md5sum <<< $RANDOM)
-  local hw_id=${random:0:16}
-  local params="_appver=424000&_device=android&_down=0&_hwid=$hw_id&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
+  local params="_appver=424000&_device=android&_down=0&_hwid=$RANDOM&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
   local sign=$(echo -n ${params}f7c926f549b9becf1c27644958676a21 | md5sum)
 
   echo 'Get playlist'
