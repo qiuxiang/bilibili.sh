@@ -1,5 +1,8 @@
 # bilibili.sh
-Bash 实现的 bilibili 播放器，视频地址解析参考了 [BiliDan](https://github.com/m13253/BiliDan)
+
+这是一个 Bash 实现的 bilibili 播放器，兼容 macOS 和 linux，比网页占用更少的资源。
+
+视频地址解析参考了 [BiliDan](https://github.com/m13253/BiliDan)
 
 ## 截图
 
