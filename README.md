@@ -6,7 +6,7 @@
 
 ## 截图
 
-![screenshot from 2017-05-18 16-40-17](https://cloud.githubusercontent.com/assets/1709072/26193986/753e5db8-3be9-11e7-8c21-3041e7e4a537.png)
+![screenshot from 2017-05-18 16-56-11](https://cloud.githubusercontent.com/assets/1709072/26194554/55749950-3beb-11e7-8350-bb73e34b1e78.png)
 ![screenshot from 2017-05-18 16-43-28](https://cloud.githubusercontent.com/assets/1709072/26193992/77d03cd6-3be9-11e7-8955-46927eeea760.png)
 
 
