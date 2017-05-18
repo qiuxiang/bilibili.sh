@@ -41,7 +41,7 @@ bangumi() {
   echo "获取番剧信息"
   local anime_id=${1##*/}
   local anime_id=${anime_id%\?*}
-  local anime_info=$(curl -s http://bangumi.bilibili.com/jsonp/seasoninfo/$anime_id.ver)
+  local anime_info=$(request "http://bangumi.bilibili.com/jsonp/seasoninfo/$anime_id.ver?callback=seasonListCallback")
   local anime_info=$(expr "$anime_info" : "seasonListCallback(\(.*\));")
   local title=$(jq -r .result.title <<< $anime_info)
   local staff=$(jq -r .result.staff <<< $anime_info)
@@ -64,7 +64,7 @@ bangumi() {
 
 search() {
   echo "搜索“$1”"
-  local html=$(curl -s "http://search.bilibili.com/all" --get --data-urlencode "keyword=$1")
+  local html=$(request "http://search.bilibili.com/all" --get --data-urlencode "keyword=$1")
   html=${html/'<meta charset="utf-8">'/<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">}
   local url=$(xpath <(echo "$html") "string(//ul[@class='so-episode']/a[1]/@href)")
   if [ -z $url ]; then
