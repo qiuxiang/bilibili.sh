@@ -89,7 +89,7 @@ main() {
     bangumi $1
     exit
   elif [[ $1 =~ $video_pattern  ]]; then
-    av_id=$(expr "$1" : .*av\(.*\)/)
+    av_id=$(expr "$1" : ".*av\(.*\)/")
   else
     search "$1"
     exit
