@@ -6,8 +6,9 @@
 
 ## 截图
 
-![screenshot from 2017-05-18 16-56-11](https://cloud.githubusercontent.com/assets/1709072/26194554/55749950-3beb-11e7-8350-bb73e34b1e78.png)
-![screenshot from 2017-05-18 16-43-28](https://cloud.githubusercontent.com/assets/1709072/26193992/77d03cd6-3be9-11e7-8955-46927eeea760.png)
+<img src="https://user-images.githubusercontent.com/1709072/30249439-4d4dd5a0-966f-11e7-9dcf-c46c1e8758e4.png" width=400/>
+
+![screenshot from 2017-09-10 21-29-27](https://user-images.githubusercontent.com/1709072/30249454-9a01f2b4-966f-11e7-9935-e57437727afd.png)
 
 
 ## 用法
