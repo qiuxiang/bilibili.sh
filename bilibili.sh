@@ -74,11 +74,19 @@ search() {
   fi
 }
 
+live() {
+  local room_id=$(request $1 | grep -Po "ROOMID = \K\d+")
+  local json=$(request "https://api.live.bilibili.com/api/playurl?cid=$room_id&otype=json")
+  local url=$(echo $json | jq -r .durl[0].url)
+  mpv $url
+}
+
 main() {
   local av_id
   local video_pattern=https?://www.bilibili.com/video/av[0-9]+/
   local anime_pattern=https?://bangumi.bilibili.com/anime/[0-9]+
   local anime_item_pattern=https?://bangumi.bilibili.com/anime/[0-9]+/play#[0-9]+
+  local live_pattern=https?://live.bilibili.com/[0-9]+
   if [[ $1 =~ $anime_item_pattern ]]; then
     echo "获取番剧数据"
     local episode_id=${1#*#}
@@ -90,6 +98,9 @@ main() {
     exit
   elif [[ $1 =~ $video_pattern  ]]; then
     av_id=$(expr "$1" : ".*av\(.*\)/")
+  elif [[ $1 =~ $live_pattern  ]]; then
+    live $1
+    exit
   else
     search "$1"
     exit
