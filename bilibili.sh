@@ -25,6 +25,13 @@ play() {
 
   echo "获取播放链接"
   local play_url=$(request "https://interface.bilibili.com/playurl?$params&sign=${sign:0:32}")
+
+  local error_message=$(jq .message <<< $play_url)
+  if [ -n "$error_message" ]; then
+    echo "无法获取播放链接：$error_message"
+    exit
+  fi
+
   local length=$(jq ".durl | length" <<< $play_url)
   local playlist
   for (( i = 0; i < length; i++ )) do
