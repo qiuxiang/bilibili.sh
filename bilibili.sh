@@ -18,30 +18,30 @@ xpath() {
 play() {
   echo "获取视频数据"
   local video_data=$(request "http://api.bilibili.com/view?appkey=8e9fc618fbd41e28&id=$1")
-  local cid=$(jq .cid <<< $video_data)
-  local title=$(jq -r .title <<< $video_data)
+  local cid=$(jq .cid <<< ${video_data})
+  local title=$(jq -r .title <<< ${video_data})
   local params="_appver=424000&_device=android&_down=0&_hwid=$RANDOM&_p=1&_tid=0&appkey=452d3958f048c02a&cid=$cid&otype=json&platform=android"
   local sign=$(echo -n ${params}f7c926f549b9becf1c27644958676a21 | md5)
 
   echo "获取播放链接"
   local play_url=$(request "https://interface.bilibili.com/playurl?$params&sign=${sign:0:32}")
 
-  local error_message=$(jq .message <<< $play_url)
+  local error_message=$(jq .message <<< ${play_url})
   if [ -n "$error_message" ]; then
     echo "无法获取播放链接：$error_message"
     exit
   fi
 
-  local length=$(jq ".durl | length" <<< $play_url)
+  local length=$(jq ".durl | length" <<< ${play_url})
   local playlist
   for (( i = 0; i < length; i++ )) do
-    playlist+="$(jq -r .durl[${i}].url <<< $play_url) "
+    playlist+="$(jq -r .durl[${i}].url <<< ${play_url}) "
   done
 
   echo "获取弹幕"
-  local comments=$(request http://comment.bilibili.com/$cid.xml --compressed)
+  local comments=$(request http://comment.bilibili.com/${cid}.xml --compressed)
   local ass=$(danmaku2ass -s 1280x720 -dm 20 -o >(cat) <(echo "$comments"))
-  mpv --force-media-title "$title" -sub-file <(echo "$ass") --merge-files $playlist
+  mpv --force-media-title "$title" -sub-file <(echo "$ass") --merge-files ${playlist}
 }
 
 bangumi() {
@@ -50,23 +50,23 @@ bangumi() {
   local anime_id=${anime_id%\?*}
   local anime_info=$(request "http://bangumi.bilibili.com/jsonp/seasoninfo/$anime_id.ver?callback=seasonListCallback")
   local anime_info=$(expr "$anime_info" : "seasonListCallback(\(.*\));")
-  local title=$(jq -r .result.title <<< $anime_info)
-  local staff=$(jq -r .result.staff <<< $anime_info)
-  local intro=$(jq -r .result.evaluate <<< $anime_info)
-  local brief=$(jq -r .result.brief <<< $anime_info)
+  local title=$(jq -r .result.title <<< ${anime_info})
+  local staff=$(jq -r .result.staff <<< ${anime_info})
+  local intro=$(jq -r .result.evaluate <<< ${anime_info})
+  local brief=$(jq -r .result.brief <<< ${anime_info})
   printf "\n$title\n"
   printf "\n$staff\n"
   printf "\n$intro\n\n"
-  local length=$(jq ".result.episodes | length" <<< $anime_info)
+  local length=$(jq ".result.episodes | length" <<< ${anime_info})
   for (( i = 0; i < length; i++)) do
-    local index=$(jq -r .result.episodes[$[$length - $i - 1]].index <<< $anime_info)
-    local title=$(jq -r .result.episodes[$[$length - $i - 1]].index_title <<< $anime_info)
+    local index=$(jq -r .result.episodes[$[$length - $i - 1]].index <<< ${anime_info})
+    local title=$(jq -r .result.episodes[$[$length - $i - 1]].index_title <<< ${anime_info})
     printf "%4d - %s %s\n" $[$i + 1] "第${index}话" "$title"
   done
   printf "\n请选择要播放的集数："
   read choice
-  url=$(jq -r .result.episodes[$[$length - $choice]].webplay_url <<< $anime_info)
-  main $url
+  url=$(jq -r .result.episodes[$[$length - $choice]].webplay_url <<< ${anime_info})
+  main ${url}
 }
 
 search() {
@@ -74,7 +74,7 @@ search() {
   local html=$(request "http://search.bilibili.com/all" --get --data-urlencode "keyword=$1")
   html=${html/'<meta charset="utf-8">'/<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">}
   local url=$(xpath <(echo "$html") "string(//ul[@class='so-episode']/a[1]/@href)")
-  if [ -z $url ]; then
+  if [ -z ${url} ]; then
     echo "未找到匹配的番剧"
   else
     bangumi http:${url%\?*}
@@ -84,8 +84,8 @@ search() {
 live() {
   local room_id=$(request $1 | grep -Po "ROOMID = \K\d+")
   local json=$(request "https://api.live.bilibili.com/api/playurl?cid=$room_id&otype=json")
-  local url=$(echo $json | jq -r .durl[0].url)
-  mpv $url
+  local url=$(echo ${json} | jq -r .durl[0].url)
+  mpv ${url}
 }
 
 main() {
@@ -97,9 +97,9 @@ main() {
   if [[ $1 =~ $anime_item_pattern ]]; then
     echo "获取番剧数据"
     local episode_id=${1#*#}
-    local episode_data=$(request http://bangumi.bilibili.com/web_api/episode/$episode_id.json)
-    local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< $episode_data)
-    av_id=$(jq -r .result.currentEpisode.avId <<< $episode_data)
+    local episode_data=$(request http://bangumi.bilibili.com/web_api/episode/${episode_id}.json)
+    local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< ${episode_data})
+    av_id=$(jq -r .result.currentEpisode.avId <<< ${episode_data})
   elif [[ $1 =~ $anime_pattern  ]]; then
     bangumi $1
     exit
@@ -113,7 +113,7 @@ main() {
     exit
   fi
 
-  play $av_id
+  play ${av_id}
 }
 
 if [ -z $1 ]; then
