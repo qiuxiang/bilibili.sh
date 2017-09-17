@@ -30,10 +30,10 @@ play() {
 
   echo "获取播放链接"
   local play_json=$(request "https://interface.bilibili.com/playurl?$params&sign=${sign:0:32}")
+  local length=$(jq ".durl | length" <<< ${play_json})
 
-  local error_message=$(jq .message <<< ${play_json})
-  if [ -n "$error_message" ]; then
-    echo "无法获取播放链接：$error_message"
+  if [ -z $length ] || [ $length == 0 ]; then
+    echo $play_json
     exit
   fi
 
@@ -52,13 +52,11 @@ play() {
 #
 # 获取番剧信息
 #
-# $1 番剧地址，如：https://bangumi.bilibili.com/anime/5992
+# $1 番剧ID
 #
 bangumi() {
   echo "获取番剧信息"
-  local anime_id=${1##*/}
-  local anime_id=${anime_id%\?*}
-  local anime_info=$(request "http://bangumi.bilibili.com/jsonp/seasoninfo/$anime_id.ver?callback=seasonListCallback")
+  local anime_info=$(request "http://bangumi.bilibili.com/jsonp/seasoninfo/$1.ver?callback=seasonListCallback")
   local anime_info=$(expr "$anime_info" : "seasonListCallback(\(.*\));")
   local title=$(jq -r .result.title <<< ${anime_info})
   local staff=$(jq -r .result.staff <<< ${anime_info})
@@ -92,7 +90,7 @@ search() {
   if [ -z ${url} ]; then
     echo "未找到匹配的番剧"
   else
-    bangumi http:${url%\?*}
+    main http:${url%\?*}
   fi
 }
 
@@ -110,10 +108,10 @@ live() {
 
 main() {
   local av_id
-  local video_pattern=https?://www.bilibili.com/video/av[0-9]+/
-  local anime_pattern=https?://bangumi.bilibili.com/anime/[0-9]+
+  local video_pattern=https?://www.bilibili.com/video/av\([0-9]+\)/?
+  local anime_pattern=https?://bangumi.bilibili.com/anime/\([0-9]+\)/?
   local anime_item_pattern=https?://bangumi.bilibili.com/anime/[0-9]+/play#[0-9]+
-  local live_pattern=https?://live.bilibili.com/[0-9]+
+  local live_pattern=https?://live.bilibili.com/\([0-9]+\)/?
   if [[ $1 =~ $anime_item_pattern ]]; then
     echo "获取番剧数据"
     local episode_id=${1#*#}
@@ -121,10 +119,10 @@ main() {
     local danmaku_id=$(jq -r .result.currentEpisode.danmaku <<< ${episode_json})
     av_id=$(jq -r .result.currentEpisode.avId <<< ${episode_json})
   elif [[ $1 =~ $anime_pattern  ]]; then
-    bangumi $1
+    bangumi ${BASH_REMATCH[1]}
     exit
   elif [[ $1 =~ $video_pattern  ]]; then
-    av_id=$(expr "$1" : ".*av\(.*\)/")
+    av_id=${BASH_REMATCH[1]}
   elif [[ $1 =~ $live_pattern  ]]; then
     live $1
     exit
